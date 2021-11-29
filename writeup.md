@@ -34,19 +34,19 @@ In this we are first previewing the range image and convert range and intensity 
 - Stack up range and intensity channels vertically in openCV
 
 The changes are made in 'loop_over_dataset.py'
-![img1](img/id_s1e1.png)
+![img1](img/6.png)
 
-![img1](img/id_s1e12.png)
+![img1](img/8.png)
 
 The changes are made in "objdet_pcl.py"
 
-![img1](img/id_s1e13.png)
+![img1](img/9.png)
 
 The range image sample:
 
-![img1](img/range_img.png)
+![img1](img/36.png)
 
-![img1](img/range_img2.png)
+![img1](img/37.png)
 
 
 
@@ -55,33 +55,33 @@ For the next part, we use the Open3D library to display the lidar point cloud on
 - 10 examples from point cloud  with varying degrees of visibility
 
 The changes are made in 'loop_over_dataset.py'
-![img1](img/id_s1e2.png)
+![img1](img/7.png)
 
 The changes are made in "objdet_pcl.py"
-![img1](img/id_s1e21.png)
+![img1](img/10.png)
 
 
 Point cloud images
 
-![img1](img/pc1.png)
+![img1](img/24.png)
 
-![img1](img/pc2.png)
+![img1](img/25.png)
 
-![img1](img/pc3.png)
+![img1](img/26.png)
 
-![img1](img/pc4.png)
+![img1](img/27.png)
 
-![img1](img/pc5.png)
+![img1](img/28.png)
 
-![img1](img/pc6.png)
+![img1](img/29.png)
 
-![img1](img/pc7.png)
+![img1](img/30.png)
 
-![img1](img/pc8.png)
+![img1](img/31.png)
 
-![img1](img/pc9.png)
+![img1](img/32.png)
 
-![img1](img/pc10.png)
+![img1](img/33.png)
 
 
 Stable features include the tail lights, the rear bumper  majorly. In some cases the additional features include the headover lights, car front lights, rear window shields. These are identified through the intensity channels . The chassis of the car is the most prominent identifiable feature from the lidar perspective. The images are analysed with different settings and the rear lights are the major stable components, also the bounding boxes are correctly assigned to the cars (used from Step-3).
@@ -98,33 +98,33 @@ In this case, we are:
 
 The changes are in the 'loop_over_dataset.py'
 
-![img1](img/id_s2e1.png)
+![img1](img/11.png)
 
 The changes are also in the "objdet_pcl.py"
 
-![img1](img/id_s2e12.png)
+![img1](img/13.png)
 
 
 A sample preview of the BEV:
 
-![img1](img/bev.png)
+![img1](img/2.png)
 
-![img1](img/bev2.png)
+![img1](img/3.png)
 
 A preview of the intensity layer:
 
 The 'lidar_pcl_top' is used in this case, shown in the Figure:
 
-![img1](img/id_s2e2.png)
+![img1](img/12.png)
 
 The corresponding intensity channel:
 
-![img1](img/intensity_layer.png)
+![img1](img/22.png)
 
 The corresponding normalized height channel:
 
 
-![img1](img/height_channel.png)
+![img1](img/5.png)
 
 
 ## Step-3: Model Based Object Detection in BEV Image
@@ -138,19 +138,19 @@ Here we are using the cloned [repo](https://github.com/maudzung/SFA3D) ,particul
 
 The changes are in "loop_over_dataset.py"
 
-![img1](img/id_s3e1.png)
+![img1](img/14.png)
 
 The changes for the detection are inside the "objdet_detect.py" file:
 
-![img1](img/id_s3e12.png)
+![img1](img/15.png)
 
 As the model input is a three-channel BEV map, the detected objects will be returned with coordinates and properties in the BEV coordinate space. Thus, before the detections can move along in the processing pipeline, they need to be converted into metric coordinates in vehicle space.
 
 A sample preview of the bounding box images:
 
-![img1](img/3d_bb.png)
+![img1](img/1.png)
 
-![img1](img/obj_detect.png)
+![img1](img/23.png)
 
 
 ## Step-4: Performance detection for 3D Object Detection
@@ -165,19 +165,19 @@ In this step, the performance is computed by getting the IOU  between labels and
 
 The changes in the code are:
 
-![img1](img/id_s4e1.png)
+![img1](img/16.png)
 
 The changes for "objdet_eval.py" where the precision and recall are calculated as functions of false positives and negatives:
 
-![img1](img/id_s4e12.png)
+![img1](img/18.png)
 
 
-![img1](img/id_s4e11.png)
+![img1](img/17.png)
 
 
 The precision recall curve is plotted showing similar results of precision =0.996 and recall=0.81372
 
-![img1](img/recall.png)
+![img1](img/38.png)
 
 In the next step, we set the 
 ```python
@@ -186,7 +186,7 @@ configs_det.use_labels_as_objects=True
  which results in precision and recall values as 1.This is shown in the following image:
 
 
-![img1](img/pre-recall_2.png)
+![img1](img/35.png)
 
 
 ## Summary of Lidar based 3D Object Detection
