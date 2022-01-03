@@ -11,9 +11,11 @@
 #
 
 # general package imports
+from ctypes import sizeof
 import numpy as np
 import torch
 from easydict import EasyDict as edict
+# from argparse import ArgumentParser 
 
 # add project directory to python path to enable relative imports
 import os
@@ -25,9 +27,95 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 # model-related
 from tools.objdet_models.resnet.models import fpn_resnet
 from tools.objdet_models.resnet.utils.evaluation_utils import decode, post_processing 
+from tools.objdet_models.resnet.utils.torch_utils import _sigmoid
 
 from tools.objdet_models.darknet.models.darknet2pytorch import Darknet as darknet
 from tools.objdet_models.darknet.utils.evaluation_utils import post_processing_v2
+
+
+# function for adding fpn_resnet configs
+def parse_test_configs(configs):
+#     parser = ArgumentParser(description='Testing config for the Implementation')
+#     parser.add_argument('--saved_fn', type=str, default='fpn_resnet_18', metavar='FN',
+#                         help='The name using for saving logs, models,...')
+#     parser.add_argument('-a', '--arch', type=str, default='fpn_resnet_18', metavar='ARCH',
+#                         help='The name of the model architecture')
+#     parser.add_argument('--pretrained_path', type=str,
+#                         default='../checkpoints/fpn_resnet_18/fpn_resnet_18_epoch_300.pth', metavar='PATH',
+#                         help='the path of the pretrained checkpoint')
+#     parser.add_argument('--K', type=int, default=50,
+#                         help='the number of top K')
+#     parser.add_argument('--no_cuda', action='store_true',
+#                         help='If true, cuda is not used.')
+#     parser.add_argument('--gpu_idx', default=0, type=int,
+#                         help='GPU index to use.')
+#     parser.add_argument('--num_samples', type=int, default=None,
+#                         help='Take a subset of the dataset to run and debug')
+#     parser.add_argument('--num_workers', type=int, default=1,
+#                         help='Number of threads for loading data')
+#     parser.add_argument('--batch_size', type=int, default=1,
+#                         help='mini-batch size (default: 4)')
+#     parser.add_argument('--peak_thresh', type=float, default=0.2)
+#     parser.add_argument('--save_test_output', action='store_true',
+#                         help='If true, the output image of the testing phase will be saved')
+#     parser.add_argument('--output_format', type=str, default='image', metavar='PATH',
+#                         help='the type of the test output (support image or video)')
+#     parser.add_argument('--output_video_fn', type=str, default='out_fpn_resnet_18', metavar='PATH',
+#                         help='the video filename if the output format is video')
+#     parser.add_argument('--output-width', type=int, default=608,
+#                         help='the width of showing output, the height maybe vary')
+
+#     configs = edict(vars(parser.parse_args()))
+    configs.saved_fn = 'fpn_resnet_18'
+    configs.arch = 'fpn_resnet_18'
+    configs.pretrained_path = '../checkpoints/fpn_resnet_18/fpn_resnet_18_epoch_300.pth'
+    configs.K = 50
+    configs.no_cuda = True
+    configs.gpu_idx = 0
+    configs.num_samples = None
+    configs.num_workers = 1
+    configs.batch_size = 1
+    configs.peak_thresh = 0.2
+    configs.save_test_output = False
+    configs.output_format = 'image'
+    configs.output_video_fn = 'out_fpn_resnet_18'
+    configs.output_width = 608 
+    configs.pin_memory = True
+    configs.distributed = False  # For testing on 1 GPU only
+
+    configs.input_size = (608, 608)
+    configs.hm_size = (152, 152)
+    configs.down_ratio = 4
+    configs.max_objects = 50
+
+    configs.imagenet_pretrained = False
+    configs.head_conv = 64
+    configs.num_classes = 3
+    configs.num_center_offset = 2
+    configs.num_z = 1
+    configs.num_dim = 3
+    configs.num_direction = 2  # sin, cos
+
+    configs.heads = {
+        'hm_cen': configs.num_classes,
+        'cen_offset': configs.num_center_offset,
+        'direction': configs.num_direction,
+        'z_coor': configs.num_z,
+        'dim': configs.num_dim
+    }
+    configs.num_input_features = 4
+
+    ####################################################################
+    ##############Dataset, Checkpoints, and results dir configs#########
+    ####################################################################
+    configs.root_dir = '../'
+    configs.dataset_dir = os.path.join(configs.root_dir, 'dataset', 'kitti')
+
+    if configs.save_test_output:
+        configs.results_dir = os.path.join(configs.root_dir, 'results', configs.saved_fn)
+        make_folder(configs.results_dir)
+
+    return configs
 
 
 # load model-related parameters into an edict
@@ -61,7 +149,44 @@ def load_configs_model(model_name='darknet', configs=None):
         ####### ID_S3_EX1-3 START #######     
         #######
         print("student task ID_S3_EX1-3")
+        configs.model_path = os.path.join(parent_path, 'tools', 'objdet_models', 'resnet')
+        configs.pretrained_filename = os.path.join(configs.model_path, 'pretrained', 'fpn_resnet_18_epoch_300.pth')
+        configs.batch_size = 4
+        configs.conf_thresh = 0.2
+        configs.img_size = 608
+        configs.nms_thresh = 0.4
+        configs.num_samples = None
+        configs.num_workers = 4
+        configs.use_giou_loss = False
 
+        ####### From test.py
+        configs.arch = 'fpn_resnet'
+        configs.pretrained_path = os.path.join(configs.model_path, 'pretrained', 'fpn_resnet_18_epoch_300.pth')
+        configs.K = 50
+        configs.max_objects = 50
+        configs.imagenet_pretrained = False
+        configs.head_conv = 64
+        configs.no_cuda = False
+        configs.gpu_idx = 0
+        configs.conf_thresh = 0.5   # peak_thresh
+        configs.pin_memory = True
+        configs.distributed = False  # For testing on 1 GPU only
+        configs.input_size = (608, 608)
+        configs.hm_size = (152, 152)
+        configs.down_ratio = 4
+        configs.num_center_offset = 2
+        configs.num_z = 1
+        configs.num_classes = 3
+        configs.num_dim = 3
+        configs.num_direction = 2  # sin, cos
+        configs.heads = {
+            'hm_cen': configs.num_classes,
+            'cen_offset': configs.num_center_offset,
+            'direction': configs.num_direction,
+            'z_coor': configs.num_z,
+            'dim': configs.num_dim
+        }
+        configs.num_input_features = 4
         #######
         ####### ID_S3_EX1-3 END #######     
 
@@ -90,13 +215,16 @@ def load_configs(model_name='fpn_resnet', configs=None):
     configs.lim_r = [0, 1.0] # reflected lidar intensity
     configs.bev_width = 608  # pixel resolution of bev image
     configs.bev_height = 608 
-
-    # add model-dependent parameters
+    
+    # add model-dependent parameters 
     configs = load_configs_model(model_name, configs)
 
     # visualization parameters
     configs.output_width = 608 # width of result image (height may vary)
     configs.obj_colors = [[0, 255, 255], [0, 0, 255], [255, 0, 0]] # 'Pedestrian': 0, 'Car': 1, 'Cyclist': 2
+    
+    # minimum IOU threshold
+    configs.min_iou = 0.5
 
     return configs
 
@@ -118,7 +246,10 @@ def create_model(configs):
         ####### ID_S3_EX1-4 START #######     
         #######
         print("student task ID_S3_EX1-4")
-
+        num_layers = 18
+        print('using ResNet architecture with feature pyramid')
+        model = fpn_resnet.get_pose_net(num_layers=num_layers, heads=configs.heads, head_conv=configs.head_conv,
+                                            imagenet_pretrained=configs.imagenet_pretrained)
         #######
         ####### ID_S3_EX1-4 END #######     
     
@@ -142,7 +273,6 @@ def detect_objects(input_bev_maps, model, configs):
 
     # deactivate autograd engine during test to reduce memory usage and speed up computations
     with torch.no_grad():  
-
         # perform inference
         outputs = model(input_bev_maps)
 
@@ -158,21 +288,36 @@ def detect_objects(input_bev_maps, model, configs):
                 detection = output_post[sample_i]
                 for obj in detection:
                     x, y, w, l, im, re, _, _, _ = obj
-                    yaw = np.arctan2(im, re)
-                    detections.append([1, x, y, 0.0, 1.50, w, l, yaw])    
-
+                    yaw = np.arctan2(im, re).item()
+                    detections.append([1, x, y, 0.0, 1.50, w, l, yaw]) 
+                
         elif 'fpn_resnet' in configs.arch:
             # decode output and perform post-processing
             
             ####### ID_S3_EX1-5 START #######     
             #######
+            # create detections variable
+            detections = []
+            
+            # copy from SFA3D/sfa/test.py repository
             print("student task ID_S3_EX1-5")
+            outputs['hm_cen'] = _sigmoid(outputs['hm_cen'])
+            outputs['cen_offset'] = _sigmoid(outputs['cen_offset'])
+            detections = decode(outputs['hm_cen'], outputs['cen_offset'], outputs['direction'], outputs['z_coor'],
+                                outputs['dim'], K=configs.K)
+            detections = detections.cpu().numpy().astype(np.float32)
+            detections = post_processing(detections, configs)
 
-            #######
-            ####### ID_S3_EX1-5 END #######     
-
+            # only extract car class
+            detections = detections[0][1]
+            detections[:, 0] = 1
             
 
+
+            
+            ####### ID_S3_EX1-5 END #######     
+
+           
     ####### ID_S3_EX2 START #######     
     #######
     # Extract 3d bounding boxes from model response
@@ -180,15 +325,26 @@ def detect_objects(input_bev_maps, model, configs):
     objects = [] 
 
     ## step 1 : check whether there are any detections
-
+    if len(detections) > 0:
+        
+#         # if model arch = darknet
+#         if 'darknet' in configs.arch:
+#             objects = detections
+            
+#         elif 'fpn_resnet' in configs.arch:
         ## step 2 : loop over all detections
-        
+        for det in detections:
+            _score, _x, _y, _z, _h, _w, _l, _yaw = det
             ## step 3 : perform the conversion using the limits for x, y and z set in the configs structure
-        
+            x = _y / configs.bev_height * (configs.lim_x[1] - configs.lim_x[0]) + configs.lim_x[0]
+            y = _x / configs.bev_width * (configs.lim_y[1] - configs.lim_y[0]) + configs.lim_y[0]
+            z = _z + configs.lim_z[0]
+            w = _w / configs.bev_width * (configs.lim_y[1] - configs.lim_y[0])
+            l = _l / configs.bev_height * (configs.lim_x[1] - configs.lim_x[0])
+            yaw = -_yaw
             ## step 4 : append the current object to the 'objects' array
-        
+            objects.append([1, x, y, z, _h, w, l, yaw])
     #######
     ####### ID_S3_EX2 START #######   
     
     return objects    
-

@@ -99,17 +99,29 @@ class Trackmanagement:
         # - delete tracks if the score is too low or P is too big (check params.py for parameters that might be helpful, but
         # feel free to define your own parameters)
         ############
-        
+        to_delete = []
         # decrease score for unassigned tracks
         for i in unassigned_tracks:
             track = self.track_list[i]
             # check visibility    
-            if meas_list: # if not empty
+            if meas_list:  # if not empty
                 if meas_list[0].sensor.in_fov(track.x):
                     # your code goes here
-                    pass 
+                    track.score -= 1 / params.window
+                    track.score = max(track.score, 0)
 
+                    # delete old tracks
+                    if track.state == 'confirmed':
+                        threshold = params.delete_threshold
+                    else:
+                        threshold = params.tentative_delete_threshold
+
+                    if track.score < threshold or track.P[0, 0] > params.max_P or track.P[1, 1] > params.max_P:
+                        to_delete.append(track)
+                    
         # delete old tracks   
+        for track in to_delete:
+            self.delete_track(track)
 
         ############
         # END student code
