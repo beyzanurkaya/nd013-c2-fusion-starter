@@ -132,15 +132,28 @@ The changes for "objdet_eval.py" where the precision and recall are calculated a
 
 <img src="img/21.png" alt="img21"/>
 
-The precision recall curve is plotted showing similar results of precision and recall.precision =0.9701 and recall=0.9451
+The precision recall curve is plotted showing similar results of precision and recall.precision and recall
 
 <img src="img/performance.png" alt="performance"/>
+
+
+``` 
+# True = use groundtruth labels as objects, False = use model-based detection
+configs_det.use_labels_as_objects = False
+precision = 0.92626549397, recall = 0.94111111111
+```
 
 In the next step, we set the <br/>
 ``` 
 configs_det.use_labels_as_objects=True
 ``` 
 <img src="img/23.png" alt="img23"/>
+
+``` 
+# True = use groundtruth labels as objects, False = use model-based detection
+configs_det.use_labels_as_objects = True 
+precision = 1.0, recall = 1.0
+``` 
 
 ###  Summary of Lidar based 3D Object Detection
 
