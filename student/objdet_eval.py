@@ -64,7 +64,7 @@ def measure_detection_performance(detections, labels, labels_valid, min_iou=0.5)
                 ## step 4 : computer the center distance between label and detection bounding-box in x, y, and z
                 dist_x = bb_label.centroid.x - bb_det.centroid.x
                 dist_y = bb_label.centroid.y - bb_det.centroid.y
-                dist_z = label.box.center_z - z / 2.
+                dist_z = label.box.center_z - z
                 ## step 5 : compute the intersection over union (IOU) between label and detection bounding-box
                 iou = bb_label.intersection(bb_det).area / bb_label.union(bb_det).area
                 ## step 6 : if IOU exceeds min_iou threshold, store [iou,dist_x, dist_y, dist_z] in matches_lab_det and increase the TP count
@@ -130,7 +130,7 @@ def compute_performance_stats(det_performance_all):
     precision = true_positives / (true_positives + false_positives)
 
     ## step 3 : compute recall 
-    recall = true_positives / all_positives
+    recall =  true_positives / float(true_positives + false_negatives)
 
     #######    
     ####### ID_S4_EX3 END #######     
